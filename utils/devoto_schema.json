@@ -1,0 +1,58 @@
+{
+    "title": "Devoto product schema", 
+    "description": "Product from Devoto",
+    "type": "object",
+    "properties":{
+        "productId":{
+            "type":"string"
+        },
+        "productName":{
+            "type":"string"
+        },
+        "brand":{
+            "anyOf":[
+                {"type":"string"},
+                {"type":"null"}
+            ]
+        },
+        "linkText":{
+            "anyOf":[
+                {"type":"string"},
+                {"type":"null"}
+            ]
+        },
+        "items":{
+            "type":"array",
+            "items":{
+                "type":"object",
+                "properties":{
+                    "sellers":{
+                        "type":"array",
+                        "items":{
+                            "type":"object",
+                            "properties":{
+                                "commertialOffer":{
+                                    "type":"object",
+                                    "properties":{
+                                        "Price":{
+                                            "type":"number"
+                                        },
+                                        "ListPrice":{
+                                            "type":"number"
+                                        },
+                                        "PriceWithoutDiscount":{
+                                            "type":"number"
+                                        },
+                                        "FullSellingPrice":{
+                                            "type":"number"
+                                        }
+                                    }, "required":["FullSellingPrice", "PriceWithoutDiscount", "ListPrice", "Price"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }, "required":["productId", "productName", "brand", "linkText"]
+}
