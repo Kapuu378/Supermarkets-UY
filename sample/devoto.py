@@ -25,8 +25,6 @@ class Devoto():
             limit_clusters=None,
             date=None,
             key_mapping=None,
-            commit_on_blocks=None,
-            session=None
     ):
         if not date:
             date = datetime.now().strftime("%Y-%m-%d")
@@ -48,15 +46,13 @@ class Devoto():
                 if n > limit_clusters: break
 
             try:
-                response = self.client.get(self.base_url + str(id))
+                response = self.client.get(self.base_url + str(id)).json()
             except (ConnectionError, ConnectTimeout):
                 print("Connection was not estabilished succesfully. Waiting and continuing...")
                 time.sleep(60)
                 continue
-
-            try:
-                response = response.json()
             except JSONDecodeError:
+                print("Couldn't parse request to a json-like object")
                 continue
 
             if type(response) == list:
