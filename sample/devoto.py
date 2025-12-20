@@ -55,15 +55,13 @@ class Devoto():
                 print("Couldn't parse request to a json-like object")
                 continue
 
-            if type(response) == list:
-                for i, dic in enumerate(response):
-                    valid = validate_json_schema(dic, 'devoto')
-                    if not valid:
-                        response[i] = {}
-            else:
-                valid = validate_json_schema(response)
-                if not valid: continue
-                response = [response]
+            if not isinstance(response, list):
+                print("After parsing we expect and array but we got a single item.")
+                continue
+
+            for i, dic in enumerate(response):
+                if not validate_json_schema(dic, 'devoto'):
+                    response[i] = {}
 
             for dic in response:
                 flat = flatten(dic)
