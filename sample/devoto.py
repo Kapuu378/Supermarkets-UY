@@ -68,7 +68,8 @@ class Devoto():
                         response[i] = {}
             else:
                 valid = validate_json_schema(response)
-                if not valid: response = {}
+                if not valid: continue
+                response = [response]
 
             for dic in response:
                 flat = flatten(dic)
