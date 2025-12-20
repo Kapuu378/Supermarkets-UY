@@ -80,7 +80,6 @@ class Devoto():
                 data["SMK_NAME"] = 'Devoto'
                 data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
 
-                print(data)
                 self.container.append(data)
 
     def remove_duplicates(self, subset):
