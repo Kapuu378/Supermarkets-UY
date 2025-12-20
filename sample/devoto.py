@@ -1,4 +1,4 @@
-from utils.database import Prices, Base, create_session, get_or_create
+from utils.database import Prices, Base, create_session
 from utils._request import Client
 from utils.validate import validate_json_schema
 from utils.transform import flatten
@@ -26,7 +26,7 @@ class Devoto():
     ):
         if not date:
             date = datetime.now().strftime("%Y-%m-%d")
-        
+
         if not key_mapping:
             key_mapping = {
                 "productId": "PROD_ID",
@@ -37,19 +37,19 @@ class Devoto():
                 "Price": "UNIT_P",
                 "PriceWithoutDiscount": "FULL_P_ND",
             }
-        
+
         for n, id in enumerate(self.cluster_ids):
             print(n, id)
             if limit_clusters is not None:
                 if n > limit_clusters: break
-            
+
             try:
                 response = self.client.get(self.base_url + str(id))
             except (ConnectionError, ConnectTimeout):
                 print("Connection was not estabilished succesfully. Waiting and continuing...")
                 time.sleep(60)
                 continue
-            
+
             try:
                 response = response.json()
             except JSONDecodeError:
@@ -63,7 +63,7 @@ class Devoto():
             else:
                 valid = validate_json_schema(response)
                 if not valid: response = {}
-            
+
             for dic in response:
                 flat = flatten(dic)
 
@@ -80,7 +80,7 @@ class Devoto():
 
                 print(data)
                 self.container.append(data)
-    
+
     def remove_duplicates(self, subset):
         self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')
         return self.container
@@ -88,7 +88,7 @@ class Devoto():
     def add_orm_objects(self, session, table):
         if not issubclass(table, Base):
             raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
-        
+
         for dic in self.container:
             elem = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
             print(elem)
@@ -98,13 +98,13 @@ class Devoto():
     def merge_orm_objects(self, session, table):
         if not issubclass(table, Base):
             raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
-        
+
         for dic in self.container:
             elem = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
             print(elem)
             session.merge(elem)
         return None
-    
+
     def load_cluster_ids(self, path):
         with open(path, "rb") as plk:
             clusters = pickle.load(plk).copy()
