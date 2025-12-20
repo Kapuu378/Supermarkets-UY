@@ -87,7 +87,7 @@ class Devoto():
         self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')
         return self.container
 
-    def add_orm_objects(self, session, table, if_not_exists=False, *args, **kwargs):
+    def add_orm_objects(self, session, table, if_not_exists=False, match=[], *args, **kwargs):
         if not issubclass(table, Base):
             raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
 
@@ -96,7 +96,7 @@ class Devoto():
 
             if if_not_exists:
                 stmt = select(table).filter_by(
-                    **get_orm_object_dict(obj)
+                    **get_orm_object_dict(obj, match)
                 )
                 result = session.execute(stmt).first()
                 if result is not None:
@@ -122,9 +122,10 @@ class Devoto():
             print(f"Loaded cluster ids:\n", pd.Series(data=clusters))
             return clusters
     
-def get_orm_object_dict(obj)-> dict:
+def get_orm_object_dict(obj, match: list)-> dict:
     return {
         attr.key: getattr(obj, attr.key)
         for attr in inspect(obj).mapper.column_attrs
+        if attr.key in match
     }
 
