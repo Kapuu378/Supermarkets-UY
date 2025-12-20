@@ -47,8 +47,6 @@ class Devoto():
             if limit_clusters is not None:
                 if n > limit_clusters: break
 
-            if n % commit_on_blocks == 0:
-                session.commit()
             try:
                 response = self.client.get(self.base_url + str(id))
             except (ConnectionError, ConnectTimeout):
@@ -88,7 +86,6 @@ class Devoto():
                 except KeyError as e:
                     print(e.args)
                     print(data)
-
 
                 self.container.append(data)
 
