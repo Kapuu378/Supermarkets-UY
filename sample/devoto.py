@@ -100,6 +100,7 @@ class Devoto():
                 )
                 result = session.execute(stmt).first()
                 if result is not None:
+                    print(obj)
                     continue
             
             print(obj)
