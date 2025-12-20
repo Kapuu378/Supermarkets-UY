@@ -41,7 +41,7 @@ class Devoto():
                 "Price": "UNIT_P",
                 "PriceWithoutDiscount": "FULL_P_ND",
             }
-        
+
         for n, id in enumerate(self.cluster_ids):
             print(n, id)
             if limit_clusters is not None:
@@ -105,7 +105,7 @@ class Devoto():
                 if result is not None:
                     print(obj)
                     continue
-            
+
             print(obj)
             session.add(obj)
         return None
@@ -125,7 +125,7 @@ class Devoto():
             clusters = pickle.load(plk).copy()
             print(f"Loaded cluster ids:\n", pd.Series(data=clusters))
             return clusters
-    
+
 def get_orm_object_dict(obj, match: list)-> dict:
     return {
         attr.key: getattr(obj, attr.key)
