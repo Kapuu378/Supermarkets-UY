@@ -47,7 +47,7 @@ class Devoto():
             if limit_clusters is not None:
                 if n > limit_clusters: break
 
-            if(n % commit_on_blocks) == 0:
+            if n % commit_on_blocks == 0:
                 session.commit()
             try:
                 response = self.client.get(self.base_url + str(id))
