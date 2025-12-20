@@ -24,7 +24,9 @@ class Devoto():
             self,
             limit_clusters=None,
             date=None,
-            key_mapping=None
+            key_mapping=None,
+            commit_on_blocks=None,
+            session=None
     ):
         if not date:
             date = datetime.now().strftime("%Y-%m-%d")
@@ -39,12 +41,14 @@ class Devoto():
                 "Price": "UNIT_P",
                 "PriceWithoutDiscount": "FULL_P_ND",
             }
-
+        
         for n, id in enumerate(self.cluster_ids):
             print(n, id)
             if limit_clusters is not None:
                 if n > limit_clusters: break
 
+            if(n % commit_on_blocks) == 0:
+                session.commit()
             try:
                 response = self.client.get(self.base_url + str(id))
             except (ConnectionError, ConnectTimeout):
