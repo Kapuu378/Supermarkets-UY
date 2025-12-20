@@ -25,8 +25,6 @@ class Devoto():
             limit_clusters=None,
             date=None,
             key_mapping=None,
-            commit_on_blocks=None,
-            session=None
     ):
         if not date:
             date = datetime.now().strftime("%Y-%m-%d")
@@ -47,29 +45,24 @@ class Devoto():
             if limit_clusters is not None:
                 if n > limit_clusters: break
 
-            if n % commit_on_blocks == 0:
-                session.commit()
             try:
-                response = self.client.get(self.base_url + str(id))
+                response = self.client.get(self.base_url + str(id)).json()
             except (ConnectionError, ConnectTimeout):
                 print("Connection was not estabilished succesfully. Waiting and continuing...")
                 time.sleep(60)
                 continue
-
-            try:
-                response = response.json()
             except JSONDecodeError:
+                print("Couldn't parse request to a json-like object")
                 continue
 
-            if type(response) == list:
-                for i, dic in enumerate(response):
-                    valid = validate_json_schema(dic, 'devoto')
-                    if not valid:
-                        response[i] = {}
-            else:
-                valid = validate_json_schema(response)
-                if not valid: continue
-                response = [response]
+            if not isinstance(response, list):
+                print("After parsing we expect and array but we got a single item.")
+                continue
+
+            for i, dic in enumerate(response):
+                if not validate_json_schema(dic, 'devoto'):
+                    response[i] = {}
+            response = [res for res in response if res is not {}]
 
             for dic in response:
                 flat = flatten(dic)
@@ -88,7 +81,7 @@ class Devoto():
                 except KeyError as e:
                     print(e.args)
                     print(data)
-
+                    continue
 
                 self.container.append(data)
 
