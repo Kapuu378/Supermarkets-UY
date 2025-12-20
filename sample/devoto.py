@@ -3,6 +3,8 @@ from utils._request import Client
 from utils.validate import validate_json_schema
 from utils.transform import flatten
 from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
+from sqlalchemy import select, inspect
+
 
 import pickle
 from datetime import datetime
@@ -85,14 +87,23 @@ class Devoto():
         self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')
         return self.container
 
-    def add_orm_objects(self, session, table):
+    def add_orm_objects(self, session, table, if_not_exists=False, *args, **kwargs):
         if not issubclass(table, Base):
             raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
 
         for dic in self.container:
-            elem = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
-            print(elem)
-            session.add(elem)
+            obj = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
+
+            if if_not_exists:
+                stmt = select(table).filter_by(
+                    **get_orm_object_dict(obj)
+                )
+                result = session.execute(stmt).first()
+                if result is not None:
+                    continue
+            
+            print(obj)
+            session.add(obj)
         return None
 
     def merge_orm_objects(self, session, table):
@@ -110,4 +121,10 @@ class Devoto():
             clusters = pickle.load(plk).copy()
             print(f"Loaded cluster ids:\n", pd.Series(data=clusters))
             return clusters
+    
+def get_orm_object_dict(obj)-> dict:
+    return {
+        attr.key: getattr(obj, attr.key)
+        for attr in inspect(obj).mapper.column_attrs
+    }
 
