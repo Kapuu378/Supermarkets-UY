@@ -80,10 +80,15 @@ class Devoto():
                     if k in flat
                 }
                 # I know this is hardcoded and it's not good but it will change
-                data["CLUS_ID"] = id
-                data["DATE"] = date
-                data["SMK_NAME"] = 'Devoto'
-                data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
+                try:
+                    data["CLUS_ID"] = id
+                    data["DATE"] = date
+                    data["SMK_NAME"] = 'Devoto'
+                    data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
+                except KeyError as e:
+                    print(e.args)
+                    print(data)
+
 
                 self.container.append(data)
 
