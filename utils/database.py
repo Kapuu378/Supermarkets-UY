@@ -41,7 +41,7 @@ class Prices(Base):
 		return (
 			f"<Prices("
 			f"ID_PK={self.ID_PK}, "
-            f"PROD_UI_FK={self.PROD_UI_FK}, "
+            f"PROD_UI_FK={self.PROD_UI}, "
 			f"DATE={self.DATE}, "
 			f"UNIT_P={self.UNIT_P}, "
 			f"FULL_P={self.FULL_P},"
