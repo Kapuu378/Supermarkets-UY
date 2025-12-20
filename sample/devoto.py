@@ -81,6 +81,7 @@ class Devoto():
                 except KeyError as e:
                     print(e.args)
                     print(data)
+                    continue
 
                 self.container.append(data)
 
