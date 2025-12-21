@@ -70,7 +70,7 @@ class Devoto():
                 for k in key_mapping
                 if k in flat
             }
-            # I know this is hardcoded and it's not good but it will change
+
             try:
                 data["CLUS_ID"] = id
                 data["DATE"] = date
