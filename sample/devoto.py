@@ -72,7 +72,7 @@ class Devoto():
             }
 
             try:
-                data["CLUS_ID"] = id
+                data["CLUS_ID"] = cluster_id
                 data["DATE"] = date
                 data["SMK_NAME"] = 'Devoto'
                 data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
