@@ -3,6 +3,7 @@ from utils._request import Client
 from utils.validate import validate_json_schema
 from utils.transform import flatten
 from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
+import requests
 from sqlalchemy import select, inspect
 
 
@@ -25,7 +26,7 @@ class Devoto():
             cluster_id=1,
             date=None,
             key_mapping=None,
-    ):
+    ) -> None:
         if not date:
             date = datetime.now().strftime("%Y-%m-%d")
 
@@ -42,13 +43,12 @@ class Devoto():
         
         print(cluster_id)
 
-        try:
-            response = self.client.get(self.base_url + str(cluster_id)).json()
-        except (ConnectionError, ConnectTimeout):
-            print("Connection was not estabilished succesfully.")
-            time.sleep(60)
+        response = self.client.get(self.base_url + str(cluster_id))
+        if not response:
             return None
-            
+        
+        try:
+            response = response.json()
         except JSONDecodeError:
             print("Couldn't parse request to a json-like object")
             return None

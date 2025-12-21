@@ -3,6 +3,7 @@ import urllib3
 import time
 from context import *
 from .validate import validate_request
+from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
 
 class Client(requests.Session):
     def __init__(self):
@@ -19,8 +20,13 @@ class Client(requests.Session):
             'Sec-Fetch-User': '?1',
             'Connection': 'keep-alive'
         })
-        self.hooks['response'].append(validate_request)
     
     def request(self, *args, **kwargs):
         time.sleep(2.5)
-        return super().request(*args, **kwargs)
+        try:
+            return super().request(*args, **kwargs)
+        
+        except (ConnectionError, ConnectTimeout):
+            print("Connection was not estabilished succesfully.")
+            time.sleep(60)
+            return None
