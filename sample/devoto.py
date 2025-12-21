@@ -60,7 +60,7 @@ class Devoto():
         for i, dic in enumerate(response):
             if not validate_json_schema(dic, 'devoto'):
                 response[i] = 'invalid json'
-        response = [dic for dic in response if dic is not 'invalid json']
+        response = [dic for dic in response if dic != 'invalid json']
 
         for dic in response:
             flat = flatten(dic)
