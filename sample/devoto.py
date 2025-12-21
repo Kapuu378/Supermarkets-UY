@@ -35,8 +35,8 @@ class Devoto():
                 "productName": "PROD_NAME",
                 "brand": "BRAND",
                 "linkText": "LK_TEXT",
-                "FullSellingPrice": "FULL_P",
-                "Price": "UNIT_P",
+                "FullSellingPrice": "UNIT_P",
+                "Price": "FULL_P",
                 "PriceWithoutDiscount": "FULL_P_ND",
             }
         
