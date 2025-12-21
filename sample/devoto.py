@@ -20,9 +20,9 @@ class Devoto():
         self.base_url = base_url
         self.client = Client()
 
-    def fetch_products(
+    def fetch_product(
             self,
-            limit_clusters=None,
+            cluster_id=1,
             date=None,
             key_mapping=None,
     ):
@@ -40,50 +40,48 @@ class Devoto():
                 "PriceWithoutDiscount": "FULL_P_ND",
             }
         
-        for n, id in enumerate(self.cluster_ids):
-            print(n, id)
-            if limit_clusters is not None:
-                if n > limit_clusters: break
+        print(cluster_id)
 
+        try:
+            response = self.client.get(self.base_url + str(cluster_id)).json()
+        except (ConnectionError, ConnectTimeout):
+            print("Connection was not estabilished succesfully.")
+            time.sleep(60)
+            return None
+            
+        except JSONDecodeError:
+            print("Couldn't parse request to a json-like object")
+            return None
+
+        if not isinstance(response, list):
+            print("After parsing we expect and array but we got a single item.")
+            return  None
+
+        for i, dic in enumerate(response):
+            if not validate_json_schema(dic, 'devoto'):
+                response[i] = 'invalid json'
+        response = [dic for dic in response if dic is not 'invalid json']
+
+        for dic in response:
+            flat = flatten(dic)
+
+            data = {
+                key_mapping[k]: flat[k]
+                for k in key_mapping
+                if k in flat
+            }
+            # I know this is hardcoded and it's not good but it will change
             try:
-                response = self.client.get(self.base_url + str(id)).json()
-            except (ConnectionError, ConnectTimeout):
-                print("Connection was not estabilished succesfully. Waiting and continuing...")
-                time.sleep(60)
-                continue
-            except JSONDecodeError:
-                print("Couldn't parse request to a json-like object")
-                continue
+                data["CLUS_ID"] = id
+                data["DATE"] = date
+                data["SMK_NAME"] = 'Devoto'
+                data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
+            except KeyError as e:
+                print(e.args)
+                print(data)
+                return None
 
-            if not isinstance(response, list):
-                print("After parsing we expect and array but we got a single item.")
-                continue
-
-            for i, dic in enumerate(response):
-                if not validate_json_schema(dic, 'devoto'):
-                    response[i] = {}
-            response = [res for res in response if res is not {}]
-
-            for dic in response:
-                flat = flatten(dic)
-
-                data = {
-                    key_mapping[k]: flat[k]
-                    for k in key_mapping
-                    if k in flat
-                }
-                # I know this is hardcoded and it's not good but it will change
-                try:
-                    data["CLUS_ID"] = id
-                    data["DATE"] = date
-                    data["SMK_NAME"] = 'Devoto'
-                    data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
-                except KeyError as e:
-                    print(e.args)
-                    print(data)
-                    continue
-
-                self.container.append(data)
+            self.container.append(data)
 
     def remove_duplicates(self, subset):
         self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')

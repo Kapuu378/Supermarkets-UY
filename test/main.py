@@ -13,5 +13,5 @@ devoto = Devoto(
 devoto.fetch_products(limit_clusters=1)
 devoto.remove_duplicates(subset=['PROD_ID'])
 devoto.merge_orm_objects(session=db_session, table=Products)
-devoto.add_orm_objects(session=db_session, table=Prices)
+devoto.add_orm_objects(session=db_session, table=Prices, if_not_exists=True, match=['PROD_UI', 'DATE'])
 
