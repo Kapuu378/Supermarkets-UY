@@ -76,24 +76,6 @@ class Devoto():
         self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')
         return self.container
 
-    def add_orm_objects(self, session, table, check_if_exists=False, *args, **kwargs):
-        if not issubclass(table, Base):
-            raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
-
-        for dic in self.container:
-            obj = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
-
-            if check_if_exists:
-                stmt = select(table).filter_by(**kwargs)
-                result = session.execute(stmt).first()
-                if result is not None:
-                    print(obj)
-                    continue
-            
-            print(obj)
-            session.add(obj)
-        return None
-
     def merge_orm_objects(self, session, table):
         if not issubclass(table, Base):
             raise TypeError("param: base should be an instance of Base mysqlalchemy class.")

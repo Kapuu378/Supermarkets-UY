@@ -30,17 +30,15 @@ class Base(DeclarativeBase):
 
 class Prices(Base):
 	__tablename__ = "Prices"
-	ID_PK = Column(Integer, primary_key=True)
 	UNIT_P = Column(Integer)
 	FULL_P = Column(Integer)
 	FULL_P_ND = Column(Integer)
-	PROD_UI = Column(String, ForeignKey("Products.PROD_UI"))
-	DATE = Column(DATETIME)
+	PROD_UI = Column(String, ForeignKey("Products.PROD_UI"),  primary_key=True)
+	DATE = Column(DATETIME, primary_key=True)
 
 	def __repr__(self):
 		return (
 			f"<Prices("
-			f"ID_PK={self.ID_PK}, "
             f"PROD_UI_FK={self.PROD_UI}, "
 			f"DATE={self.DATE}, "
 			f"UNIT_P={self.UNIT_P}, "

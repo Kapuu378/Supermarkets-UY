@@ -15,7 +15,7 @@ for index, cluster_id in enumerate(devoto.cluster_ids):
     if index % block == 0:
         devoto.remove_duplicates(subset=['PROD_ID'])
         devoto.merge_orm_objects(session=db_session, table=Products)
-        devoto.add_orm_objects(session=db_session, table=Prices, if_not_exists=True, match=['PROD_UI', 'DATE'])
+        devoto.merge_orm_objects(session=db_session, table=Prices)
         devoto.container = []
         db_session.commit()
     devoto.fetch_product(cluster_id=cluster_id)
