@@ -26,6 +26,7 @@ class Devoto():
             date=None,
             key_mapping=None,
     ) -> None:
+    
         if not date:
             date = datetime.now().strftime("%Y-%m-%d")
 
@@ -39,7 +40,6 @@ class Devoto():
                 "Price": "FULL_P",
                 "PriceWithoutDiscount": "FULL_P_ND",
             }
-        
         print(cluster_id)
 
         response = self.client.get(self.base_url + str(cluster_id))
@@ -76,17 +76,15 @@ class Devoto():
         self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')
         return self.container
 
-    def add_orm_objects(self, session, table, if_not_exists=False, match=[], *args, **kwargs):
+    def add_orm_objects(self, session, table, check_if_exists=False, *args, **kwargs):
         if not issubclass(table, Base):
             raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
 
         for dic in self.container:
             obj = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
 
-            if if_not_exists:
-                stmt = select(table).filter_by(
-                    **get_orm_object_dict(obj, match)
-                )
+            if check_if_exists:
+                stmt = select(table).filter_by(**kwargs)
                 result = session.execute(stmt).first()
                 if result is not None:
                     print(obj)
@@ -112,10 +110,4 @@ class Devoto():
             print(f"Loaded cluster ids:\n", pd.Series(data=clusters))
             return clusters
     
-def get_orm_object_dict(obj, match: list)-> dict:
-    return {
-        attr.key: getattr(obj, attr.key)
-        for attr in inspect(obj).mapper.column_attrs
-        if attr.key in match
-    }
 
