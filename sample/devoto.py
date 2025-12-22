@@ -45,6 +45,7 @@ class Devoto():
         response = self.client.get(self.base_url + str(cluster_id))
         if not is_valid_response(response, check_json=True, check_type=list):
             return
+        response = response.json()
 
         for i, dic in enumerate(response):
             if not validate_json_schema(dic, 'devoto'):
