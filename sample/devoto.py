@@ -1,6 +1,6 @@
 from utils.database import Prices, Base, create_session
 from utils._request import Client
-from utils.validate import validate_json_schema
+from utils.validate import validate_json_schema, is_valid_response
 from utils.transform import flatten
 from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
 import requests
@@ -44,18 +44,8 @@ class Devoto():
         print(cluster_id)
 
         response = self.client.get(self.base_url + str(cluster_id))
-        if not response:
-            return None
-        
-        try:
-            response = response.json()
-        except JSONDecodeError:
-            print("Couldn't parse request to a json-like object")
-            return None
-
-        if not isinstance(response, list):
-            print("After parsing we expect and array but we got a single item.")
-            return  None
+        if not is_valid_response(response, check_json=True, check_type=list):
+            return
 
         for i, dic in enumerate(response):
             if not validate_json_schema(dic, 'devoto'):
