@@ -6,7 +6,6 @@ from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
 import requests
 from sqlalchemy import select, inspect
 
-
 import pickle
 from datetime import datetime
 import pandas as pd
@@ -21,7 +20,7 @@ class Devoto():
         self.base_url = base_url
         self.client = Client()
 
-    def fetch_product(
+    def fetch_clusterid(
             self,
             cluster_id=1,
             date=None,
