@@ -1,30 +1,12 @@
-from context import *
-from dotenv import load_dotenv
 import os
 
-from typing import List
-from typing import Optional
-from sqlalchemy import create_engine, ForeignKey, select, and_, Integer, String, Float, Column
+from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
 from sqlalchemy.types import DATETIME
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import NoResultFound
+from context import *
 
-def create_session():
-	load_dotenv(
-		dotenv_path=os.path.join(
-		ROOT_PATH, 'utils/sql_credentials.env')
-	)
-	USERNAME = os.getenv('USERNAME')
-	PASSWORD = os.getenv('PASSWORD')
-
-	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$default")
-	Session = sessionmaker(bind=engine)
-	session = Session()
-	return session
+from dotenv import load_dotenv
 
 class Base(DeclarativeBase):
 	pass
@@ -34,6 +16,7 @@ class Prices(Base):
 	UNIT_P = Column(Integer)
 	FULL_P = Column(Integer)
 	FULL_P_ND = Column(Integer)
+	# Compound primary key
 	PROD_UI = Column(String, ForeignKey("Products.PROD_UI"),  primary_key=True)
 	DATE = Column(DATETIME, primary_key=True)
 
@@ -77,3 +60,16 @@ def merge_orm_objects(data_list, session, table):
 		object = table(**{k:v for k,v in data.items() if k in table.__table__.columns})
 		session.merge(object)
 	return None
+
+def create_session():
+	load_dotenv(
+		dotenv_path=os.path.join(
+		ROOT_PATH, 'utils/sql_credentials.env')
+	)
+	USERNAME = os.getenv('USERNAME')
+	PASSWORD = os.getenv('PASSWORD')
+
+	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$default")
+	Session = sessionmaker(bind=engine)
+	session = Session()
+	return session

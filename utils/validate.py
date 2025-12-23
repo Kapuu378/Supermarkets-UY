@@ -1,7 +1,6 @@
 import requests
 import json
 from requests.exceptions import JSONDecodeError
-from utils.custom_exceptions import NotARequestObjectError
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 

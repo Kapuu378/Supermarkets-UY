@@ -1,9 +1,7 @@
 import requests
-import urllib3
 import time
 from context import *
-from .validate import validate_request
-from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
+from requests.exceptions import ConnectionError, ConnectTimeout
 
 class Client(requests.Session):
     def __init__(self):

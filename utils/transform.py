@@ -1,5 +1,4 @@
 from .custom_exceptions import handle_recursion
-import pandas as pd
 
 from dataclasses import dataclass
 
