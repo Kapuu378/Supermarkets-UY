@@ -16,7 +16,8 @@ from sqlalchemy.exc import NoResultFound
 def create_session():
 	load_dotenv(
 		dotenv_path=os.path.join(
-		ROOT_PATH, 'utils/sql_credentials.env'))
+		ROOT_PATH, 'utils/sql_credentials.env')
+	)
 	USERNAME = os.getenv('USERNAME')
 	PASSWORD = os.getenv('PASSWORD')
 
@@ -67,3 +68,12 @@ class Products(Base):
 			f"BRAND={self.BRAND}"
 			f")>"
 		)
+
+def merge_orm_objects(data_list, session, table):
+	if not issubclass(table, Base):
+		raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
+
+	for data in data_list:
+		object = table(**{k:v for k,v in data.items() if k in table.__table__.columns})
+		session.merge(object)
+	return None

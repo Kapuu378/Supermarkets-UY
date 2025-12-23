@@ -37,3 +37,7 @@ def rename_keys(dic: dict, mapping: dict) -> dict:
     if not isinstance(mapping, dict): raise TypeError
     items = {mapping.get(k, k):v for k, v in dic.items()}
     return items
+
+def remove_duplicates(data_list) -> list[dict]:
+    result = list(set(data_list))
+    return result
