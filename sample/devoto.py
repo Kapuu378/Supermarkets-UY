@@ -27,8 +27,7 @@ class Devoto():
     base_url = 'https://www.devoto.com.uy/api/catalog_system/pub/products/search?&_from=0&_to=49&fq=productClusterIds:'
     date = datetime.now().strftime("%Y-%m-%d")
 
-    def __init__(self, path_to_clusters):
-        self.cluster_ids = self.load_cluster_ids(path_to_clusters)
+    def __init__(self):
         self.client = Client()
 
     def _fetch(
