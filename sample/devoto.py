@@ -74,14 +74,7 @@ class Devoto():
                 for k in key_mapping
                 if k in flat_json
             }
-            
-            try:
-                # Unique identifier of our products. 
-                data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
-            except KeyError as e:
-                print(e.args)
-                print(data)
-                continue
+
 
             data_list.append(data)
         
@@ -118,7 +111,7 @@ if __name__ == '__main__':
         )
 
         for data in data_list:
-            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto'})
+            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto', 'PROD_UI': data['PROD_ID'] + '-Devoto'})
             result.append(data)
 
         if index % block == 0:
