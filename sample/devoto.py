@@ -122,7 +122,6 @@ if __name__ == '__main__':
             result.append(data)
 
         if index % block == 0:
-            result = remove_duplicates(result)
             merge_orm_objects(data_list=result, session=db_session, table=Products)
             merge_orm_objects(data_list=result, session=db_session, table=Prices)
             db_session.commit()
