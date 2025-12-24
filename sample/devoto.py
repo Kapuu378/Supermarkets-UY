@@ -1,134 +1,130 @@
-from utils.database import Prices, Base, create_session
-from utils._request import Client
-from utils.validate import validate_json_schema
-from utils.transform import flatten
-from requests.exceptions import JSONDecodeError, ConnectionError, ConnectTimeout
-from sqlalchemy import select, inspect
-
-
-import pickle
 from datetime import datetime
-import pandas as pd
+import pickle
 import os
-import time
+
+from utils.database import Prices, Products, create_session, merge_orm_objects
+from utils.validate import validate_json_schema, is_valid_response
+from utils.transform import flatten, remove_duplicates
+from utils._request import Client
+from context import *
+
+import requests
+
+db_session = create_session()
+
+DEFAULT_KEY_MAPPING = {
+    "productId": "PROD_ID",
+    "productName": "PROD_NAME",
+    "brand": "BRAND",
+    "linkText": "LK_TEXT",
+    "FullSellingPrice": "UNIT_P",
+    "Price": "FULL_P",
+    "PriceWithoutDiscount": "FULL_P_ND",
+}
 
 class Devoto():
-    container = []
+    base_url = 'https://www.devoto.com.uy/api/catalog_system/pub/products/search?&_from=0&_to=49&fq=productClusterIds:'
+    date = datetime.now().strftime("%Y-%m-%d")
 
-    def __init__(self, path_to_clusters, base_url):
+    def __init__(self, path_to_clusters):
         self.cluster_ids = self.load_cluster_ids(path_to_clusters)
-        self.base_url = base_url
         self.client = Client()
 
-    def fetch_products(
+    def _fetch(
             self,
-            limit_clusters=None,
-            date=None,
-            key_mapping=None,
-    ):
-        if not date:
-            date = datetime.now().strftime("%Y-%m-%d")
+            cluster_id,
+    ) -> requests.Response | None:
 
-        if not key_mapping:
-            key_mapping = {
-                "productId": "PROD_ID",
-                "productName": "PROD_NAME",
-                "brand": "BRAND",
-                "linkText": "LK_TEXT",
-                "FullSellingPrice": "FULL_P",
-                "Price": "UNIT_P",
-                "PriceWithoutDiscount": "FULL_P_ND",
+        response = self.client.get(f"{self.base_url}{cluster_id}")
+        return response
+
+    def _validate_response(self, response, check_json=True, check_type=list):
+        if not is_valid_response(response, check_json=check_json, check_type=check_type):
+            return None
+
+        return response
+
+    def _validate_json(self, json_list, schema='Devoto'):
+        """
+        This function receives a list of dictionaries (parsed jsons) and returns a
+        list of the dictionaries that were proved valid against a json schema.
+
+        :param json_list: List of dictionaries.
+        :param schema: a Json schema.
+        """
+        for index, json in enumerate(json_list):
+            if not validate_json_schema(json, schema):
+                json_list[index] = 'invalid json'
+
+        valid_jsons_list = [j for j in json_list if j != 'invalid json']
+        return valid_jsons_list
+
+    def _extract_data(self,
+        vaild_json_list,
+        key_mapping=DEFAULT_KEY_MAPPING
+    ):
+
+        data_list = []
+
+        for json in vaild_json_list:
+            flat_json = flatten(json)
+
+            data = {
+                key_mapping[k]: flat_json[k]
+                for k in key_mapping
+                if k in flat_json
             }
 
-        for n, id in enumerate(self.cluster_ids):
-            print(n, id)
-            if limit_clusters is not None:
-                if n > limit_clusters: break
-
             try:
-                response = self.client.get(self.base_url + str(id)).json()
-            except (ConnectionError, ConnectTimeout):
-                print("Connection was not estabilished succesfully. Waiting and continuing...")
-                time.sleep(60)
-                continue
-            except JSONDecodeError:
-                print("Couldn't parse request to a json-like object")
+                # Unique identifier of our products.
+                data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
+            except KeyError as e:
+                print(e.args)
+                print(data)
                 continue
 
-            if not isinstance(response, list):
-                print("After parsing we expect and array but we got a single item.")
-                continue
+            data_list.append(data)
 
-            for i, dic in enumerate(response):
-                if not validate_json_schema(dic, 'devoto'):
-                    response[i] = {}
-            response = [res for res in response if res is not {}]
+        return data_list
 
-            for dic in response:
-                flat = flatten(dic)
+    def scrape(self, cluster_id, schema='devoto', *args, **kwargs):
+        response = self._fetch(cluster_id=cluster_id)
+        response = self._validate_response(response=response, check_json=True, check_type=list)
+        if not response: return None
 
-                data = {
-                    key_mapping[k]: flat[k]
-                    for k in key_mapping
-                    if k in flat
-                }
-                # I know this is hardcoded and it's not good but it will change
-                try:
-                    data["CLUS_ID"] = id
-                    data["DATE"] = date
-                    data["SMK_NAME"] = 'Devoto'
-                    data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
-                except KeyError as e:
-                    print(e.args)
-                    print(data)
-                    continue
+        json = response.json()
+        valid_jsons_list = self._validate_json(json_list=json, schema=schema)
 
-                self.container.append(data)
+        data_list = self._extract_data(valid_jsons_list)
+        return data_list
 
-    def remove_duplicates(self, subset):
-        self.container = pd.DataFrame(data=self.container).drop_duplicates(subset=subset, ignore_index=True).to_dict('records')
-        return self.container
 
-    def add_orm_objects(self, session, table, if_not_exists=False, match=[], *args, **kwargs):
-        if not issubclass(table, Base):
-            raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
 
-        for dic in self.container:
-            obj = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
+if __name__ == '__main__':
+    devoto = Devoto()
+    today = datetime.now().strftime("%Y-%m-%d")
+    block = 10
+    cluster_ids = None
 
-            if if_not_exists:
-                stmt = select(table).filter_by(
-                    **get_orm_object_dict(obj, match)
-                )
-                result = session.execute(stmt).first()
-                if result is not None:
-                    print(obj)
-                    continue
+    with open(os.path.join(ROOT_PATH, "utils/devoto_cluster_ids.plk"), "rb") as plk:
+        cluster_ids = pickle.load(plk)
 
-            print(obj)
-            session.add(obj)
-        return None
+    result = []
 
-    def merge_orm_objects(self, session, table):
-        if not issubclass(table, Base):
-            raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
+    for index, cluster_id in enumerate(cluster_ids):
+        if index == 2: break
+        data_list = devoto.scrape(
+            cluster_id=cluster_id,
+            schema='Devoto'
+        )
 
-        for dic in self.container:
-            elem = table(**{k:v for k,v in dic.items() if k in table.__table__.columns})
-            print(elem)
-            session.merge(elem)
-        return None
+        for data in data_list:
+            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto'})
+            result.append(data)
 
-    def load_cluster_ids(self, path):
-        with open(path, "rb") as plk:
-            clusters = pickle.load(plk).copy()
-            print(f"Loaded cluster ids:\n", pd.Series(data=clusters))
-            return clusters
-
-def get_orm_object_dict(obj, match: list)-> dict:
-    return {
-        attr.key: getattr(obj, attr.key)
-        for attr in inspect(obj).mapper.column_attrs
-        if attr.key in match
-    }
-
+        if index % block == 0:
+            result = remove_duplicates(result)
+            merge_orm_objects(data_list=result, session=db_session, table=Products)
+            merge_orm_objects(data_list=result, session=db_session, table=Prices)
+            db_session.commit()
+            result = []

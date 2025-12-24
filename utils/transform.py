@@ -1,5 +1,4 @@
 from .custom_exceptions import handle_recursion
-import pandas as pd
 
 from dataclasses import dataclass
 
@@ -37,3 +36,7 @@ def rename_keys(dic: dict, mapping: dict) -> dict:
     if not isinstance(mapping, dict): raise TypeError
     items = {mapping.get(k, k):v for k, v in dic.items()}
     return items
+
+def remove_duplicates(data_list) -> list[dict]:
+    result = list(set(data_list))
+    return result

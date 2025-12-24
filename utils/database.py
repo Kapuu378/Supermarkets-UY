@@ -1,46 +1,28 @@
-from context import *
-from dotenv import load_dotenv
 import os
 
-from typing import List
-from typing import Optional
-from sqlalchemy import create_engine, ForeignKey, select, and_, Integer, String, Float, Column
+from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
 from sqlalchemy.types import DATETIME
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import NoResultFound
+from context import *
 
-def create_session():
-	load_dotenv(
-		dotenv_path=os.path.join(
-		ROOT_PATH, 'utils/sql_credentials.env'))
-	USERNAME = os.getenv('USERNAME')
-	PASSWORD = os.getenv('PASSWORD')
-
-	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$default")
-	Session = sessionmaker(bind=engine)
-	session = Session()
-	return session
+from dotenv import load_dotenv
 
 class Base(DeclarativeBase):
 	pass
 
 class Prices(Base):
 	__tablename__ = "Prices"
-	ID_PK = Column(Integer, primary_key=True)
 	UNIT_P = Column(Integer)
 	FULL_P = Column(Integer)
 	FULL_P_ND = Column(Integer)
-	PROD_UI = Column(String, ForeignKey("Products.PROD_UI"))
-	DATE = Column(DATETIME)
+	# Compound primary key
+	PROD_UI = Column(String, ForeignKey("Products.PROD_UI"),  primary_key=True)
+	DATE = Column(DATETIME, primary_key=True)
 
 	def __repr__(self):
 		return (
 			f"<Prices("
-			f"ID_PK={self.ID_PK}, "
             f"PROD_UI_FK={self.PROD_UI}, "
 			f"DATE={self.DATE}, "
 			f"UNIT_P={self.UNIT_P}, "
@@ -69,3 +51,25 @@ class Products(Base):
 			f"BRAND={self.BRAND}"
 			f")>"
 		)
+
+def merge_orm_objects(data_list, session, table):
+	if not issubclass(table, Base):
+		raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
+
+	for data in data_list:
+		object = table(**{k:v for k,v in data.items() if k in table.__table__.columns})
+		session.merge(object)
+	return None
+
+def create_session():
+	load_dotenv(
+		dotenv_path=os.path.join(
+		ROOT_PATH, 'utils/sql_credentials.env')
+	)
+	USERNAME = os.getenv('USERNAME')
+	PASSWORD = os.getenv('PASSWORD')
+
+	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$default")
+	Session = sessionmaker(bind=engine)
+	session = Session()
+	return session
