@@ -1,3 +1,5 @@
+
+from context import *
 from datetime import datetime
 import pickle
 import os
@@ -6,7 +8,6 @@ from utils.database import Prices, Products, create_session, merge_orm_objects
 from utils.validate import validate_json_schema, is_valid_response
 from utils.transform import flatten, remove_duplicates
 from utils._request import Client
-from context import *
 
 import requests
 

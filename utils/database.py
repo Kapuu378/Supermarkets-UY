@@ -1,10 +1,10 @@
+from context import *
 import os
 
 from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
 from sqlalchemy.types import DATETIME
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
-from context import *
 
 from dotenv import load_dotenv
 
