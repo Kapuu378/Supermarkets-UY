@@ -6,7 +6,7 @@ import os
 
 from utils.database import Prices, Products, create_session, merge_orm_objects
 from utils.validate import validate_json_schema, is_valid_response
-from utils.transform import flatten, remove_duplicates
+from utils.transform import flatten
 from utils._request import Client
 
 import requests
