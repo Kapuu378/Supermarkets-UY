@@ -3,10 +3,11 @@ from context import *
 from datetime import datetime
 import pickle
 import os
+import time
 
 from utils.database import Prices, Products, create_session, merge_orm_objects
 from utils.validate import validate_json_schema, is_valid_response
-from utils.transform import flatten, remove_duplicates
+from utils.transform import flatten
 from utils._request import Client
 
 import requests
@@ -75,13 +76,7 @@ class Devoto():
                 if k in flat_json
             }
 
-            try:
-                # Unique identifier of our products.
-                data["PROD_UI"] = data["PROD_ID"] + "-" + data["SMK_NAME"]
-            except KeyError as e:
-                print(e.args)
-                print(data)
-                continue
+
 
             data_list.append(data)
 
@@ -103,7 +98,7 @@ class Devoto():
 if __name__ == '__main__':
     devoto = Devoto()
     today = datetime.now().strftime("%Y-%m-%d")
-    block = 10
+    block = 25
     cluster_ids = None
 
     with open(os.path.join(ROOT_PATH, "utils/devoto_cluster_ids.plk"), "rb") as plk:
@@ -112,18 +107,17 @@ if __name__ == '__main__':
     result = []
 
     for index, cluster_id in enumerate(cluster_ids):
-        if index == 2: break
+        print(index)
         data_list = devoto.scrape(
             cluster_id=cluster_id,
             schema='Devoto'
         )
 
         for data in data_list:
-            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto'})
+            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto', 'PROD_UI': data['PROD_ID'] + '-Devoto'})
             result.append(data)
 
-        if index % block == 0:
-            result = remove_duplicates(result)
+        if (index + 1) % block == 0:
             merge_orm_objects(data_list=result, session=db_session, table=Products)
             merge_orm_objects(data_list=result, session=db_session, table=Prices)
             db_session.commit()
