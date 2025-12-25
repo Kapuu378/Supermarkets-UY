@@ -6,8 +6,6 @@ from sqlalchemy.types import DATETIME
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
 
-from dotenv import load_dotenv
-
 class Base(DeclarativeBase):
 	pass
 
@@ -62,14 +60,8 @@ def merge_orm_objects(data_list, session, table):
 	return None
 
 def create_session():
-	load_dotenv(
-		dotenv_path=os.path.join(
-		ROOT_PATH, 'utils/sql_credentials.env')
-	)
-	USERNAME = os.getenv('USERNAME')
-	PASSWORD = os.getenv('PASSWORD')
-
-	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$prices")
+	engine = create_engine(f"sqlite:///supermarkets.db")
 	Session = sessionmaker(bind=engine)
 	session = Session()
+	Base.metadata.create_all(bind=engine)
 	return session

@@ -26,7 +26,7 @@ DEFAULT_KEY_MAPPING = {
 
 class Devoto():
     base_url = 'https://www.devoto.com.uy/api/catalog_system/pub/products/search?&_from=0&_to=49&fq=productClusterIds:'
-    date = datetime.now().strftime("%Y-%m-%d")
+    date = datetime.now()
 
     def __init__(self):
         self.client = Client()
@@ -95,8 +95,8 @@ class Devoto():
 
 if __name__ == '__main__':
     devoto = Devoto()
-    today = datetime.now().strftime("%Y-%m-%d")
-    block = 25
+    today = datetime.now()
+    block = 3
     cluster_ids = None
 
     with open(os.path.join(ROOT_PATH, "utils/devoto_cluster_ids.plk"), "rb") as plk:
@@ -106,6 +106,7 @@ if __name__ == '__main__':
 
     for index, cluster_id in enumerate(cluster_ids):
         print(index)
+        if index > 3: break
         data_list = devoto.scrape(
             cluster_id=cluster_id,
             schema='Devoto'
