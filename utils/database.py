@@ -30,7 +30,7 @@ class Prices(Base):
 			f"FULL_P_ND={self.FULL_P_ND}"
 			f")>"
 		)
-    
+
 class Products(Base):
 	__tablename__ = "Products"
 	PROD_UI = Column(String, primary_key=True)
@@ -44,7 +44,7 @@ class Products(Base):
 	def __repr__(self):
 		return (
 			f"<Products("
-            f"PROD_UI={self.PROD_UI}, " 
+            f"PROD_UI={self.PROD_UI}, "
 			f"PROD_ID={self.PROD_ID}, "
 			f"CLUS_ID={self.CLUS_ID}, "
 			f"PROD_NAME={self.PROD_NAME}, "
@@ -69,7 +69,7 @@ def create_session():
 	USERNAME = os.getenv('USERNAME')
 	PASSWORD = os.getenv('PASSWORD')
 
-	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$default")
+	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$prices")
 	Session = sessionmaker(bind=engine)
 	session = Session()
 	return session
