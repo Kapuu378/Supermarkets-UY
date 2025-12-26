@@ -83,7 +83,7 @@ class Devoto():
     def scrape(self, cluster_id, schema='devoto', *args, **kwargs):
         response = self._fetch(cluster_id=cluster_id)
         response = self._validate_response(response=response, check_json=True, check_type=list)
-        if not response: return None
+        if not response: return []
 
         json = response.json()
         valid_jsons_list = self._validate_json(json_list=json, schema=schema)
