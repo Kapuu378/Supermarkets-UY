@@ -5,12 +5,13 @@ import pickle
 import os
 import time
 
-from utils.database import Prices, Products, create_session, merge_orm_objects
+from utils.database import Prices, Products, create_session
 from utils.validate import validate_json_schema, is_valid_response
 from utils.transform import flatten
 from utils._request import Client
 
 import requests
+from sqlalchemy.orm.exc import NoResultFound
 
 db_session = create_session()
 
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     with open(os.path.join(ROOT_PATH, "utils/devoto_cluster_ids.plk"), "rb") as plk:
         cluster_ids = pickle.load(plk)
 
-    result = []
+    results = []
 
     for index, cluster_id in enumerate(cluster_ids):
         print(index)
@@ -113,11 +114,23 @@ if __name__ == '__main__':
         )
 
         for data in data_list:
-            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto', 'PROD_UI': data['PROD_ID'] + '-Devoto'})
-            result.append(data)
+            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto'})
+            results.append(data)
 
         if (index + 1) % block == 0:
-            merge_orm_objects(data_list=result, session=db_session, table=Products)
-            merge_orm_objects(data_list=result, session=db_session, table=Prices)
+            product = None
+            for r in results:
+                try:
+                    product = db_session.query(Products).filter_by(
+                        PROD_ID=r['PROD_ID'],
+                        SMK_NAME=r['SMK_NAME']).one()
+                except NoResultFound:
+                    product = Products(**{k:v for k,v in r.items() if k in Products.__table__.columns})
+                    db_session.add(product)
+                    db_session.flush()
+                finally:
+                    db_session.add(
+                        Prices(**{k:v for k,v in r.items() if k in Prices.__table__.columns}, PROD_FK=product.ID))
+            
             db_session.commit()
-            result = []
+            results = []
