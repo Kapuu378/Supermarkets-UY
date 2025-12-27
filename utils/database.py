@@ -1,75 +1,72 @@
 from context import *
-import os
 
 from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
-from sqlalchemy.types import DATETIME
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import sessionmaker
-
-from dotenv import load_dotenv
+from sqlalchemy.orm import sessionmaker, Session
 
 class Base(DeclarativeBase):
 	pass
 
 class Prices(Base):
+	# I will create an index on date and prod_fk
 	__tablename__ = "Prices"
+	ID = Column(Integer, primary_key=True, autoincrement=True)
 	UNIT_P = Column(Integer)
 	FULL_P = Column(Integer)
 	FULL_P_ND = Column(Integer)
-	# Compound primary key
-	PROD_UI = Column(String, ForeignKey("Products.PROD_UI"),  primary_key=True)
-	DATE = Column(DATETIME, primary_key=True)
+	DATE = Column(String(100))
+
+	PROD_FK = Column(String, ForeignKey("Products.ID"))
 
 	def __repr__(self):
 		return (
 			f"<Prices("
-            f"PROD_UI_FK={self.PROD_UI}, "
+            f"ID={self.ID}, "
 			f"DATE={self.DATE}, "
 			f"UNIT_P={self.UNIT_P}, "
 			f"FULL_P={self.FULL_P},"
-			f"FULL_P_ND={self.FULL_P_ND}"
+			f"FULL_P_ND={self.FULL_P_ND}",
+			f"PROD_FK={self.PROD_FK}"
 			f")>"
 		)
 
 class Products(Base):
 	__tablename__ = "Products"
-	PROD_UI = Column(String, primary_key=True)
+	ID = Column(Integer, primary_key=True, autoincrement=True)
 	PROD_ID = Column(Integer)
-	CLUS_ID = Column(Integer)
-	PROD_NAME = Column(String)
-	BRAND = Column(String)
-	LK_TEXT = Column(String)
-	SMK_NAME = Column(String)
+	PROD_NAME = Column(String(100))
+	BRAND = Column(String(50))
+	LK_TEXT = Column(String(100))
+	SMK_NAME = Column(String(50))
 
 	def __repr__(self):
 		return (
 			f"<Products("
-            f"PROD_UI={self.PROD_UI}, "
+            f"ID={self.ID}, "
 			f"PROD_ID={self.PROD_ID}, "
-			f"CLUS_ID={self.CLUS_ID}, "
 			f"PROD_NAME={self.PROD_NAME}, "
 			f"BRAND={self.BRAND}"
 			f")>"
 		)
 
-def merge_orm_objects(data_list, session, table):
-	if not issubclass(table, Base):
-		raise TypeError("param: base should be an instance of Base mysqlalchemy class.")
-
-	for data in data_list:
-		object = table(**{k:v for k,v in data.items() if k in table.__table__.columns})
-		session.merge(object)
-	return None
-
 def create_session():
-	load_dotenv(
-		dotenv_path=os.path.join(
-		ROOT_PATH, 'utils/sql_credentials.env')
-	)
-	USERNAME = os.getenv('USERNAME')
-	PASSWORD = os.getenv('PASSWORD')
-
-	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$prices")
+	engine = create_engine(f"sqlite:///supermarkets.db")
 	Session = sessionmaker(bind=engine)
 	session = Session()
+	Base.metadata.create_all(bind=engine)
 	return session
+
+def get_or_create_product(data: dict, db_session: Session) -> Products:
+	try:
+		product = db_session.query(Products).filter_by(
+			PROD_ID=data['PROD_ID'],
+			SMK_NAME=data['SMK_NAME']).one()
+	except NoResultFound:
+		product = Products(**{k:v for k,v in data.items() if k in Products.__table__.columns})
+		db_session.add(product)
+		db_session.flush()
+	except KeyError:
+		print(f"Key error in data: {data}. Either PROD_ID or SMK_NAME it's missing.")
+	finally:
+		return product

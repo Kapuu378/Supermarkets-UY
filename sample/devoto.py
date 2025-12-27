@@ -1,14 +1,12 @@
 
 from context import *
 from datetime import datetime
-import pickle
-import os
-import time
 
-from utils.database import Prices, Products, create_session, merge_orm_objects
+from utils.database import Prices, create_session, get_or_create_product
 from utils.validate import validate_json_schema, is_valid_response
 from utils.transform import flatten
 from utils._request import Client
+from sample.devoto_categories import CATEGORIES
 
 import requests
 
@@ -25,24 +23,32 @@ DEFAULT_KEY_MAPPING = {
 }
 
 class Devoto():
-    base_url = 'https://www.devoto.com.uy/api/catalog_system/pub/products/search?&_from=0&_to=49&fq=productClusterIds:'
-    date = datetime.now().strftime("%Y-%m-%d")
+    base_url = 'https://www.devoto.com.uy/api/catalog_system/pub/products/search?'
 
     def __init__(self):
         self.client = Client()
 
     def _fetch(
             self,
-            cluster_id,
+            category: str,
+            _from: int,
+            _to: int
     ) -> requests.Response | None:
-
-        response = self.client.get(f"{self.base_url}{cluster_id}")
+        params = {
+            "_from":_from,
+            "_to":_to,
+            "fq":f"C:{category}",
+            "hideUnavailableItems":"true",
+            "sc":"1"
+        }
+        print("Fetching devoto: ", params)
+        response = self.client.get(self.base_url, params=params)
         return response
 
-    def _validate_response(self, response, check_json=True, check_type=list):
-        if not is_valid_response(response, check_json=check_json, check_type=check_type):
-            return None
-
+    def _validate_response(self, response):
+        if not is_valid_response(response, check_json=True, check_type=list):
+            return False
+        
         return response
 
     def _validate_json(self, json_list, schema='Devoto'):
@@ -79,10 +85,10 @@ class Devoto():
             data_list.append(data)
 
         return data_list
-
-    def scrape(self, cluster_id, schema='devoto', *args, **kwargs):
-        response = self._fetch(cluster_id=cluster_id)
-        response = self._validate_response(response=response, check_json=True, check_type=list)
+    
+    def scrape(self, category: str, _from: int, _to: int, schema: str, *args, **kwargs):
+        response = self._fetch(category=category, _from=_from, _to=_to)
+        response = self._validate_response(response)
         if not response: return []
 
         json = response.json()
@@ -96,27 +102,53 @@ class Devoto():
 if __name__ == '__main__':
     devoto = Devoto()
     today = datetime.now().strftime("%Y-%m-%d")
-    block = 25
     cluster_ids = None
+    db_session.info["_pushed_product_ids"] = []
+    
+    # Here we grab the list of the products that were already inserted in the DB today. 
+    # We load those into memory for quick validating.
+    db_session.info["_pushed_product_ids"].extend(
+        [int(price.PROD_FK) for price in 
+        db_session.query(Prices.PROD_FK).filter(Prices.DATE==today).all()])
+    
+    # Category ID's:
+    categories = CATEGORIES
+    for category in categories:
+        _from = 0
+        _to = 49
+        empty_hit = 0
+        
+        while _from < 2500:
+            data_list = devoto.scrape(
+                category=category,
+                _from=_from,
+                _to=_to,
+                schema='Devoto'
+            ) 
+            if empty_hit == 2:
+                print("Hitting dead end for category: ", category)
+                break
+            if data_list == []:
+                empty_hit = empty_hit + 1
+                continue
+            
+            def add_info(d):
+                d.update({'DATE': today, 'SMK_NAME':'Devoto'})
+                return d
+            data_list = list(map(add_info, data_list))
 
-    with open(os.path.join(ROOT_PATH, "utils/devoto_cluster_ids.plk"), "rb") as plk:
-        cluster_ids = pickle.load(plk)
+            for d in data_list:
+                product = get_or_create_product(d, db_session)
+                
+                if product.ID in db_session.info["_pushed_product_ids"]:
+                    print(f"Product: {product.PROD_NAME} already pushed today to DB with Primary Key: {product.ID}")
+                    continue
+                else:
+                    price = Prices(**{k:v for k,v in d.items() if k in Prices.__table__.columns}, PROD_FK=product.ID)
+                    db_session.add(price)
+                    # Save last pushed product id in cache.
+                    db_session.info["_pushed_product_ids"].append(product.ID)
 
-    result = []
-
-    for index, cluster_id in enumerate(cluster_ids):
-        print(index)
-        data_list = devoto.scrape(
-            cluster_id=cluster_id,
-            schema='Devoto'
-        )
-
-        for data in data_list:
-            data.update({'CLUS_ID': cluster_id, 'DATE': today, 'SMK_NAME':'Devoto', 'PROD_UI': data['PROD_ID'] + '-Devoto'})
-            result.append(data)
-
-        if (index + 1) % block == 0:
-            merge_orm_objects(data_list=result, session=db_session, table=Products)
-            merge_orm_objects(data_list=result, session=db_session, table=Prices)
             db_session.commit()
-            result = []
+            _from = _from + 49
+            _to = _to + 49

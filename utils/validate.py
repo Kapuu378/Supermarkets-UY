@@ -1,3 +1,6 @@
+from context import *
+import os
+
 import requests
 import json
 from requests.exceptions import JSONDecodeError
@@ -39,7 +42,7 @@ def is_valid_response(response: requests.Response, check_json: bool = False, che
 def validate_json_schema(instance: list[dict], schema_type: dict):
     schema = {}
     if str.lower(schema_type) == 'devoto':
-        with open("/home/FranciscoGibert/supermarkets-uy/Supermarkets-UY/utils/devoto_schema.json", "r") as file:
+        with open(os.path.join(ROOT_PATH, "utils/devoto_schema.json"), "r") as file:
             schema = json.load(file)
 
     try:
