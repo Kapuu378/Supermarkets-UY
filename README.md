@@ -16,11 +16,11 @@ pip install -r requirements.txt
 ```
 
 ## **Quick start**
-After setting it up you can run any of the Supermarket webscrappers in the proyect. E.g. 
+After setting it up you can run any of the Supermarket webscrappers in the project. E.g. 
 ``` python3 sample/devoto.py```
 
 ## **DATABASE TABLE STRUCTURE**
-When you run this script it will automatically create a .db file in the root directory of the proyect. There will be only two tables:
+When you run this script it will automatically create a .db file in the root directory of the project. There will be only two tables:
 
 **Products**
 | ID (int) | PROD_ID (int) | PROD_NAME (varchar) | BRAND (varchar) | LK_TEXT (varchar) | SMK_NAME (varchar) |
@@ -36,7 +36,7 @@ When you run this script it will automatically create a .db file in the root dir
 |2|190|190|200|2025-12-26|24|
 |...|...|...|...|...|...|
 
-This table structure prevents duplication of data and reduces it's size.
+This table structure prevents duplication of data and reduces its size.
 Joining the two tables results in:
 <img src="https://i.imgur.com/XBSKXQ9.png">
 
