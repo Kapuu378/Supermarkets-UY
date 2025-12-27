@@ -5,6 +5,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker, Session
 
+from dotenv import load_dotenv
+
 class Base(DeclarativeBase):
 	pass
 
@@ -51,7 +53,14 @@ class Products(Base):
 		)
 
 def create_session():
-	engine = create_engine(f"sqlite:///supermarkets.db")
+	load_dotenv(
+	dotenv_path=os.path.join(
+	ROOT_PATH, 'utils/sql_credentials.env')
+	)
+	USERNAME = os.getenv('USERNAME')
+	PASSWORD = os.getenv('PASSWORD')
+
+	engine = create_engine(f"mysql://{USERNAME}:{PASSWORD}@FranciscoGibert.mysql.pythonanywhere-services.com/FranciscoGibert$default")
 	Session = sessionmaker(bind=engine)
 	session = Session()
 	Base.metadata.create_all(bind=engine)
