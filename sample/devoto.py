@@ -1,9 +1,6 @@
 
 from context import *
 from datetime import datetime
-import pickle
-import os
-import time
 
 from utils.database import Prices, create_session, get_or_create_product
 from utils.validate import validate_json_schema, is_valid_response
@@ -128,7 +125,8 @@ if __name__ == '__main__':
                 _to=_to,
                 schema='Devoto'
             ) 
-            if empty_hit == 3:
+            if empty_hit == 2:
+                print("Hitting dead end for category: ", category)
                 break
             if data_list == []:
                 empty_hit = empty_hit + 1
