@@ -16,19 +16,20 @@ pip install -r requirements.txt
 ```
 
 ## **Quick start**
-After setting it up you can run any of the Supermarket webscrappers in the proyect. E.g. ``` python3 sample/devoto.py```
+After setting it up you can run any of the Supermarket webscrappers in the proyect. E.g. 
+``` python3 sample/devoto.py```
 
 ## **DATABASE TABLE STRUCTURE**
--> When you run this script it will automatically create a .db file in the root directory of the proyect. There will be only two tables:
+When you run this script it will automatically create a .db file in the root directory of the proyect. There will be only two tables:
 
-## Products
+**Products**
 | ID (int) | PROD_ID (int) | PROD_NAME (varchar) | BRAND (varchar) | LK_TEXT (varchar) | SMK_NAME (varchar) |
 |---------|--------|----------|----------|----------|----------|
 |1|999999|Aceite|Marca 1| aceite-girasol-m3dn|Devoto|
 |2|999998|Arroz|Marca 2| arroz-f4dn|Devoto|
 |...|...|...|...|...|
 
-## Prices
+**Prices**
 | ID (int) | UNIT_P(int) |FULL_P (int) | FULL_P_ND (int) | DATE(varchar)|PROD_FK (int)|
 |---------|--------|----------|----------|----------|----------|
 |1|190|190|200|2025-12-26|23|
@@ -39,4 +40,4 @@ This table structure prevents duplication of data and reduces it's size.
 Joining the two tables results in:
 <img src="https://i.imgur.com/XBSKXQ9.png">
 
-## **Note:** All the scrapers will push their data to this DB file.
+**Note:** All the scrapers will push their data to this DB file.
