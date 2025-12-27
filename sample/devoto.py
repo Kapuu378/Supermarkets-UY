@@ -5,10 +5,11 @@ import pickle
 import os
 import time
 
-from utils.database import Prices, Products, create_session, get_or_create_product
+from utils.database import Prices, create_session, get_or_create_product
 from utils.validate import validate_json_schema, is_valid_response
 from utils.transform import flatten
 from utils._request import Client
+from sample.devoto_categories import CATEGORIES
 
 import requests
 
@@ -114,8 +115,7 @@ if __name__ == '__main__':
         db_session.query(Prices.PROD_FK).filter(Prices.DATE==today).all()])
     
     # Category ID's:
-    # Bebidas -> 350, Almacen -> 412, Perfumeria y limpieza -> 476,  Frescos -> 539, 
-    categories = ['350', '412','476','539']
+    categories = CATEGORIES
     for category in categories:
         _from = 0
         _to = 49

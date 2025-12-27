@@ -1,9 +1,7 @@
 from context import *
-import os
 
-from sqlalchemy import create_engine, ForeignKey, UniqueConstraint, Integer, String, Column
+from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.types import DATETIME
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -47,7 +45,6 @@ class Products(Base):
 			f"<Products("
             f"ID={self.ID}, "
 			f"PROD_ID={self.PROD_ID}, "
-			f"CLUS_ID={self.CLUS_ID}, "
 			f"PROD_NAME={self.PROD_NAME}, "
 			f"BRAND={self.BRAND}"
 			f")>"
