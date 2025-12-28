@@ -6,7 +6,7 @@ from utils.database import Prices, create_session, get_or_create_product
 from utils.validate import validate_json_schema, is_valid_response
 from utils.transform import flatten
 from utils._request import Client
-from sample.devoto_categories import CATEGORIES
+from sample.devoto_categories import get_categories
 
 import requests
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         db_session.query(Prices.PROD_FK).filter(Prices.DATE==today).all()])
     
     # Category ID's:
-    categories = CATEGORIES
+    categories = get_categories()
     for category in categories:
         _from = 0
         _to = 49
