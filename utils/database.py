@@ -57,16 +57,18 @@ def create_session():
 	Base.metadata.create_all(bind=engine)
 	return session
 
-def get_or_create_product(data: dict, db_session: Session) -> Products:
+def get_or_create_product(product, db_session: Session) -> Products:
 	try:
 		product = db_session.query(Products).filter_by(
-			PROD_ID=data['PROD_ID'],
-			SMK_NAME=data['SMK_NAME']).one()
+			PROD_ID=product.PROD_ID,
+			SMK_NAME=product.SMK_NAME).one()
+
 	except NoResultFound:
-		product = Products(**{k:v for k,v in data.items() if k in Products.__table__.columns})
 		db_session.add(product)
 		db_session.flush()
+
 	except KeyError:
-		print(f"Key error in data: {data}. Either PROD_ID or SMK_NAME it's missing.")
+		print(f"Key error in data: {product}. Either PROD_ID or SMK_NAME it's missing.")
+
 	finally:
 		return product
