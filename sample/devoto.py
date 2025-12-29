@@ -6,16 +6,6 @@ from utils.database import Prices, Products, create_session, get_or_create_produ
 from sample.devoto_categories import get_categories
 from sample.core import VtexBaseScrapper
 
-KEY_MAPPING = {
-    "productId": "PROD_ID",
-    "productName": "PROD_NAME",
-    "brand": "BRAND",
-    "linkText": "LK_TEXT",
-    "FullSellingPrice": "UNIT_P",
-    "Price": "FULL_P",
-    "PriceWithoutDiscount": "FULL_P_ND",
-}
-
 class Devoto(VtexBaseScrapper):
     def __init__(self):
         super().__init__(base_url='https://www.devoto.com.uy/api/catalog_system/pub/products/search?')
@@ -71,33 +61,32 @@ if __name__ == '__main__':
         _to = 49
         empty_hit = 0
         
-        while _from < 2500:
-            data_list = devoto.scrape(
-                _from=_from,
-                _to=_to,
-                category=category
-            ) 
-            if empty_hit == 2:
-                print("Hitting dead end for category: ", category)
-                break
-            if data_list == []:
-                empty_hit = empty_hit + 1
-                continue
+        data_list = devoto.scrape(
+            _from=_from,
+            _to=_to,
+            category=category
+        ) 
+        if empty_hit == 2:
+            print("Hitting dead end for category: ", category)
+            break
+        if data_list == []:
+            empty_hit = empty_hit + 1
+            continue
+        
+        for d in data_list:
+            d.update({'DATE': today, 'SMK_NAME':'Devoto'})
+            product = Products(**{k:v for k,v in d.items() if k in Products.__table__.columns})
+            product = get_or_create_product(product, db_session)
             
-            for d in data_list:
-                d.update({'DATE': today, 'SMK_NAME':'Devoto'})
-                product = Products(**{k:v for k,v in d.items() if k in Products.__table__.columns})
-                product = get_or_create_product(product, db_session)
+            if product.ID in db_session.info["_pushed_product_ids"]:
+                print(f"Product: {product.PROD_NAME} already pushed today to DB with Primary Key: {product.ID}")
+                continue
+            else:
+                price = Prices(**{k:v for k,v in d.items() if k in Prices.__table__.columns}, PROD_FK=product.ID)
+                db_session.add(price)
+                # Save last pushed product id in cache.
+                db_session.info["_pushed_product_ids"].append(product.ID)
                 
-                if product.ID in db_session.info["_pushed_product_ids"]:
-                    print(f"Product: {product.PROD_NAME} already pushed today to DB with Primary Key: {product.ID}")
-                    continue
-                else:
-                    price = Prices(**{k:v for k,v in d.items() if k in Prices.__table__.columns}, PROD_FK=product.ID)
-                    db_session.add(price)
-                    # Save last pushed product id in cache.
-                    db_session.info["_pushed_product_ids"].append(product.ID)
-                    
-            db_session.commit()
-            _from = _from + 49
-            _to = _to + 49
+        db_session.commit()
+        _from = _from + 49
+        _to = _to + 49
