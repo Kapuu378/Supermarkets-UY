@@ -1,9 +1,8 @@
 from context import *
 
 from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 from dotenv import load_dotenv
 
@@ -11,7 +10,6 @@ class Base(DeclarativeBase):
 	pass
 
 class Prices(Base):
-	# I will create an index on date and prod_fk
 	__tablename__ = "Prices"
 	ID = Column(Integer, primary_key=True, autoincrement=True)
 	UNIT_P = Column(Integer)
@@ -65,17 +63,3 @@ def create_session():
 	session = Session()
 	Base.metadata.create_all(bind=engine)
 	return session
-
-def get_or_create_product(data: dict, db_session: Session) -> Products:
-	try:
-		product = db_session.query(Products).filter_by(
-			PROD_ID=data['PROD_ID'],
-			SMK_NAME=data['SMK_NAME']).one()
-	except NoResultFound:
-		product = Products(**{k:v for k,v in data.items() if k in Products.__table__.columns})
-		db_session.add(product)
-		db_session.flush()
-	except KeyError:
-		print(f"Key error in data: {data}. Either PROD_ID or SMK_NAME it's missing.")
-	finally:
-		return product

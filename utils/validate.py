@@ -1,52 +1,15 @@
 from context import *
-import os
-
-import requests
-import json
-from requests.exceptions import JSONDecodeError
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
+import json as jsonlib
 
-def is_valid_response(response: requests.Response, check_json: bool = False, check_type: str = None):
-    """
-    Docstring for is_valid_response
-
-    :param response: Requests response object.
-    :type response: requests.Response
-    :param check_json: If set to true it will check if the response is parseable to a json-like object with the requests json provided method.
-    :type check_json: bool
-    :param check_type: If set to true it will check if after parsing the response we get and specific type, for example: an array.
-    :type check_type: str
-    """
-    r = None
-
-    if not isinstance(response, requests.Response):
-        # TODO: add loggin
-        return False
-
-    if response.status_code not in [200, 206]:
-        return False
-
-    if check_json:
-        try:
-            r = response.json()
-        except JSONDecodeError:
-            return False
-
-    if check_type and check_json:
-        return isinstance(r, check_type)
-
-    return True
-
-
-def validate_json_schema(instance: list[dict], schema_type: dict):
+def validate_json_schema(json, path_to_schema):
     schema = {}
-    if str.lower(schema_type) == 'devoto':
-        with open(os.path.join(ROOT_PATH, "utils/devoto_schema.json"), "r") as file:
-            schema = json.load(file)
+    with open(path_to_schema, "r") as file:
+        schema = jsonlib.load(file)
 
     try:
-        validate(instance=instance, schema=schema)
+        validate(instance=json, schema=schema)
     except ValidationError:
         return False
 

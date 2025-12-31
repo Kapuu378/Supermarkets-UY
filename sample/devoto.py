@@ -2,38 +2,29 @@
 from context import *
 from datetime import datetime
 
-from utils.database import Prices, create_session, get_or_create_product
-from utils.validate import validate_json_schema, is_valid_response
-from utils.transform import flatten
-from utils._request import Client
-from sample.devoto_categories import CATEGORIES
+from utils.database import create_session
+from sample.categories import get_devoto_categories
+from utils.models import VtexBaseScrapper
+from utils.functions import(
+    get_valid_jsons, extract_subdictionaries, get_or_create_product, 
+    create_price_object, get_pushed_products_id, is_json_parseable
+)
 
-import requests
-
-db_session = create_session()
-
-DEFAULT_KEY_MAPPING = {
-    "productId": "PROD_ID",
-    "productName": "PROD_NAME",
-    "brand": "BRAND",
-    "linkText": "LK_TEXT",
-    "FullSellingPrice": "UNIT_P",
-    "Price": "FULL_P",
-    "PriceWithoutDiscount": "FULL_P_ND",
-}
-
-class Devoto():
-    base_url = 'https://www.devoto.com.uy/api/catalog_system/pub/products/search?'
-
+class Devoto(VtexBaseScrapper):
     def __init__(self):
-        self.client = Client()
+        super().__init__(base_url='https://www.devoto.com.uy/api/catalog_system/pub/products/search?')
+        self.path_to_schema = os.path.join(ROOT_PATH, "utils/devoto_schema.json")
+        self.key_mapping = {
+        'PROD_ID':['productId'],
+        'PROD_NAME':['productName'],
+        'BRAND':['brand'],
+        'LK_TEXT':['linkText'],
+        'UNIT_P':['items', 0, 'sellers', 0, 'commertialOffer', 'FullSellingPrice'],
+        'FULL_P':['items', 0, 'sellers', 0, 'commertialOffer', 'Price'],
+        'FULL_P_ND':['items', 0, 'sellers', 0, 'commertialOffer', 'PriceWithoutDiscount'],
+        }
 
-    def _fetch(
-            self,
-            category: str,
-            _from: int,
-            _to: int
-    ) -> requests.Response | None:
+    def scrape(self, _from, _to, category) -> list[dict]:
         params = {
             "_from":_from,
             "_to":_to,
@@ -41,114 +32,52 @@ class Devoto():
             "hideUnavailableItems":"true",
             "sc":"1"
         }
-        print("Fetching devoto: ", params)
-        response = self.client.get(self.base_url, params=params)
-        return response
+        response = self._fetch(params)
 
-    def _validate_response(self, response):
-        if not is_valid_response(response, check_json=True, check_type=list):
-            return False
-        
-        return response
+        if not is_json_parseable(response):
+            return []
 
-    def _validate_json(self, json_list, schema='Devoto'):
-        """
-        This function receives a list of dictionaries (parsed jsons) and returns a
-        list of the dictionaries that were proved valid against a json schema.
+        valid_jsons = get_valid_jsons(response.json(), self.path_to_schema)
 
-        :param json_list: List of dictionaries.
-        :param schema: a Json schema.
-        """
-        for index, json in enumerate(json_list):
-            if not validate_json_schema(json, schema):
-                json_list[index] = 'invalid json'
-
-        valid_jsons_list = [j for j in json_list if j != 'invalid json']
-        return valid_jsons_list
-
-    def _extract_data(self,
-        vaild_json_list,
-        key_mapping=DEFAULT_KEY_MAPPING
-    ):
-
-        data_list = []
-
-        for json in vaild_json_list:
-            flat_json = flatten(json)
-
-            data = {
-                key_mapping[k]: flat_json[k]
-                for k in key_mapping
-                if k in flat_json
-            }
-
-            data_list.append(data)
-
-        return data_list
-    
-    def scrape(self, category: str, _from: int, _to: int, schema: str, *args, **kwargs):
-        response = self._fetch(category=category, _from=_from, _to=_to)
-        response = self._validate_response(response)
-        if not response: return []
-
-        json = response.json()
-        valid_jsons_list = self._validate_json(json_list=json, schema=schema)
-
-        data_list = self._extract_data(valid_jsons_list)
-        return data_list
-
-
+        return extract_subdictionaries(valid_jsons, self.key_mapping)
 
 if __name__ == '__main__':
     devoto = Devoto()
+    db_session = create_session()
     today = datetime.now().strftime("%Y-%m-%d")
-    cluster_ids = None
-    db_session.info["_pushed_product_ids"] = []
-    
-    # Here we grab the list of the products that were already inserted in the DB today. 
-    # We load those into memory for quick validating.
-    db_session.info["_pushed_product_ids"].extend(
-        [int(price.PROD_FK) for price in 
-        db_session.query(Prices.PROD_FK).filter(Prices.DATE==today).all()])
-    
-    # Category ID's:
-    categories = CATEGORIES
+    pushed_ids = get_pushed_products_id(db_session, today)
+
+    categories = get_devoto_categories()
     for category in categories:
         _from = 0
         _to = 49
         empty_hit = 0
         
-        while _from < 2500:
-            data_list = devoto.scrape(
-                category=category,
-                _from=_from,
-                _to=_to,
-                schema='Devoto'
-            ) 
-            if empty_hit == 2:
-                print("Hitting dead end for category: ", category)
-                break
-            if data_list == []:
-                empty_hit = empty_hit + 1
-                continue
+        data_list = devoto.scrape(
+            _from=_from,
+            _to=_to,
+            category=category
+        ) 
+        
+        if empty_hit == 2:
+            print("Hitting dead end for category: ", category)
+            continue
+        if data_list == []:
+            empty_hit = empty_hit + 1
+            continue
+        
+        for d in data_list:
+            d.update({'DATE': today, 'SMK_NAME':'Devoto'})
+            product = get_or_create_product(d, db_session)
             
-            def add_info(d):
-                d.update({'DATE': today, 'SMK_NAME':'Devoto'})
-                return d
-            data_list = list(map(add_info, data_list))
+            if product.ID in pushed_ids:
+                print(f"Product: {product.PROD_NAME} already pushed today to DB with Primary Key: {product.ID}")
+                continue
+            else:
+                price = create_price_object(d, PROD_FK=product.ID)
+                db_session.add(price)
+                pushed_ids.append(product.ID)
 
-            for d in data_list:
-                product = get_or_create_product(d, db_session)
-                
-                if product.ID in db_session.info["_pushed_product_ids"]:
-                    print(f"Product: {product.PROD_NAME} already pushed today to DB with Primary Key: {product.ID}")
-                    continue
-                else:
-                    price = Prices(**{k:v for k,v in d.items() if k in Prices.__table__.columns}, PROD_FK=product.ID)
-                    db_session.add(price)
-                    # Save last pushed product id in cache.
-                    db_session.info["_pushed_product_ids"].append(product.ID)
-
-            db_session.commit()
-            _from = _from + 49
-            _to = _to + 49
+        db_session.commit()
+        _from = _from + 49
+        _to = _to + 49
