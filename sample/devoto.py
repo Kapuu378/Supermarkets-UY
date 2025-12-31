@@ -32,6 +32,7 @@ class Devoto(VtexBaseScrapper):
             "hideUnavailableItems":"true",
             "sc":"1"
         }
+        print(f"Fetching: {params}")
         response = self._fetch(params)
 
         if not is_json_parseable(response):
