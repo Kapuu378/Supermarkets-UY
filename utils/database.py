@@ -1,15 +1,13 @@
 from context import *
 
 from sqlalchemy import create_engine, ForeignKey, Integer, String, Column
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 class Base(DeclarativeBase):
 	pass
 
 class Prices(Base):
-	# I will create an index on date and prod_fk
 	__tablename__ = "Prices"
 	ID = Column(Integer, primary_key=True, autoincrement=True)
 	UNIT_P = Column(Integer)
@@ -51,24 +49,8 @@ class Products(Base):
 		)
 
 def create_session():
-	engine = create_engine(f"sqlite:///supermarkets.db")
+	engine = create_engine(f"sqlite:///{ROOT_PATH}/supermarkets.db")
 	Session = sessionmaker(bind=engine)
 	session = Session()
 	Base.metadata.create_all(bind=engine)
 	return session
-
-def get_or_create_product(product, db_session: Session) -> Products:
-	try:
-		product = db_session.query(Products).filter_by(
-			PROD_ID=product.PROD_ID,
-			SMK_NAME=product.SMK_NAME).one()
-
-	except NoResultFound:
-		db_session.add(product)
-		db_session.flush()
-
-	except KeyError:
-		print(f"Key error in data: {product}. Either PROD_ID or SMK_NAME it's missing.")
-
-	finally:
-		return product

@@ -1,6 +1,8 @@
-import requests
-import time
 from context import *
+import time
+
+import requests
+
 from requests.exceptions import ConnectionError, ConnectTimeout
 
 class Client(requests.Session):
@@ -19,12 +21,21 @@ class Client(requests.Session):
             'Connection': 'keep-alive'
         })
     
-    def request(self, *args, **kwargs):
+    def request(self, method, url, params, *args, **kwargs):
         time.sleep(2.5)
         try:
-            return super().request(*args, **kwargs)
+            return super().request(method=method, url=url, params=params, *args, **kwargs)
         
         except (ConnectionError, ConnectTimeout):
             print("Connection was not estabilished succesfully.")
             time.sleep(60)
             return None
+        
+class VtexBaseScrapper():    
+    client = Client()
+
+    def __init__(self, base_url):
+        self.base_url = base_url
+
+    def _fetch(self, params) -> requests.Response | None:
+        return self.client.get(url=self.base_url, params=params)
