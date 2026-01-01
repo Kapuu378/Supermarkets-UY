@@ -85,7 +85,7 @@ def get_pushed_products_id(db_session: Session, date: Union[str, datetime]):
     :param date: Date
     :type date: Union[str, datetime]
     """
-    return [price.PROD_FK 
+    return [int(price.PROD_FK)
     for price in 
     db_session.query(Prices.PROD_FK).filter(Prices.DATE==date).all()]
 

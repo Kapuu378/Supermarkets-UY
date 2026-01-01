@@ -44,7 +44,46 @@ def get_devoto_categories()->list[str]:
 
     return result
 
-tata = {}
+eldorado = {
+    "COMESTIBLES":{
+        "ALMACEN":['/2/16/'],
+        "CONGELADOS":['/2/18/'],
+        "ELABORACION PROPIA":['/2/19/'],
+        "GOLOSINAS":['/2/21/'],
+        "PANADERIA":['/2/23/']
+    },
+    "CUIDADO PERSONAL":{
+        "BEBES":['/3/27/'],
+        "CUIDADO CAPILAR":['/3/29/'],
+        "CUIDADO CORPORAL":['/3/30/'],
+        "HIGIENE BUSCAL":['/3/31/']
+    },
+    "LIMPIEZA":{
+        "CUIDADO DE LA ROPA":['/8/59/'],
+        "INSECTICIDAS":['/8/62/'],
+        "LIMPIEZA HOGAR":['/8/63/'],
+        "LIMPIEZA MARCAS PROPIAS":['/8/64/']
+    },
+    "FRESCOS":{
+        "CARNICERIA":['/20/17/'],
+        "LACTEOS":['/20/22/'],
+        "FRUTAS Y VERDURAS":['/20/24/'],
+        "ENVASADO AL VACIO":['/20/173/'],
+        "FIAMBRERIA":['/20/174/'],
+        "POSTRES":['/20/175/'],
+        "PASTAS FRESCAS":['/20/235/']
+    },
+    "BEBIDAS":{
+        "CON ALCOHOL":['/1/14/'],
+        "SIN ALCOHOL":['/1/15/']
+    }
+}
 
-def get_tata_categories()->list[str]:
-    pass
+def get_eldorado_categories()->list[str]:
+    result = []
+    
+    for sub_category in eldorado.values():
+        for list in sub_category.values():
+            result.extend(list)
+
+    return result
