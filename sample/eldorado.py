@@ -1,19 +1,18 @@
-
 from context import *
 from datetime import datetime
 
 from utils.database import create_session
-from sample.categories import get_devoto_categories
+from sample.categories import get_eldorado_categories
 from utils.models import VtexBaseScrapper
 from utils.functions import(
     get_valid_jsons, extract_subdictionaries, get_or_create_product, 
     create_price_object, get_pushed_products_id, is_json_parseable
 )
 
-class Devoto(VtexBaseScrapper):
+class Eldorado(VtexBaseScrapper):
     def __init__(self):
-        super().__init__(base_url='https://www.devoto.com.uy/api/catalog_system/pub/products/search?')
-        self.path_to_schema = os.path.join(ROOT_PATH, "utils/devoto_schema.json")
+        super().__init__(base_url='https://www.eldorado.com.uy/api/catalog_system/pub/products/search?')
+        self.path_to_schema = os.path.join(ROOT_PATH, "utils/eldorado_schema.json")
         self.key_mapping = {
         'PROD_ID':['productId'],
         'PROD_NAME':['productName'],
@@ -33,6 +32,7 @@ class Devoto(VtexBaseScrapper):
             "sc":"1"
         }
         response = self._fetch(params)
+        print(f"Fetching Eldorado at: {params}")
 
         if not is_json_parseable(response):
             return []
@@ -42,20 +42,20 @@ class Devoto(VtexBaseScrapper):
         return extract_subdictionaries(valid_jsons, self.key_mapping)
 
 if __name__ == '__main__':
-    devoto = Devoto()
+    eldorado = Eldorado()
     db_session = create_session()
     today = datetime.now().strftime("%Y-%m-%d")
     pushed_ids = get_pushed_products_id(db_session, today)
 
-    categories = get_devoto_categories()
+    categories = get_eldorado_categories()
     for category in categories:
         _from = 0
         _to = 49
         empty_hit = 0
-
-        while True:
         
-            data_list = devoto.scrape(
+        while True:
+
+            data_list = eldorado.scrape(
                 _from=_from,
                 _to=_to,
                 category=category
@@ -69,7 +69,7 @@ if __name__ == '__main__':
                 continue
             
             for d in data_list:
-                d.update({'DATE': today, 'SMK_NAME':'Devoto'})
+                d.update({'DATE': today, 'SMK_NAME':'Eldorado'})
                 product = get_or_create_product(d, db_session)
                 
                 if product.ID in pushed_ids:
