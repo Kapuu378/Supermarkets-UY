@@ -1,4 +1,4 @@
-from json import JSONDecodeError
+from requests.exceptions import JSONDecodeError
 from pathlib import Path
 from typing import Union
 from datetime import datetime
