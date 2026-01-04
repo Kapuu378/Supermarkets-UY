@@ -1,0 +1,68 @@
+{
+  "title": "Tata product schema",
+  "description": "Product from Tata",
+  "type": "object",
+  "properties": {
+    "node": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "brand": {
+          "type": "object",
+          "properties": {
+            "brandName": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "brandName"
+          ]
+        },
+        "slug": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offers": {
+          "type": "object",
+          "properties": {
+            "offers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "price": {
+                    "type": "number"
+                  },
+                  "listPrice": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "price",
+                  "listPrice"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "brand",
+        "slug"
+      ]
+    }
+  }
+}
