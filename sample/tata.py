@@ -44,7 +44,11 @@ class Tata(VtexBaseScrapper):
         if not is_json_parseable(response):
             return []
 
-        response_jsons = response.json()["data"]["search"]["products"]["edges"]
+        try:
+            response_jsons = response.json()["data"]["search"]["products"]["edges"]
+        except TypeError:
+            """Emtpy hit"""
+            return []
         valid_jsons = get_valid_jsons(response_jsons, self.path_to_schema)
 
         return extract_subdictionaries(valid_jsons, self.key_mapping)
