@@ -1,1 +1,4 @@
 
+https://www.tata.com.uy/api/graphql?operationName=ProductsQuery&variables={"first":100,"after":"0","sort":"score_desc","term":"","selectedFacets":[{"key":"productClusterIds","value":"7275"},{"key":"channel","value":"{\"salesChannel\":\"4\",\"regionId\":\"U1cjdGF0YXV5bW9udGV2aWRlbw==\"}"},{"key":"locale","value":"es-UY"}]}
+
+https://www.tata.com.uy/api/graphql?operationName=ProductsQuery&variables={"first":100,"after":0,"sort":"score_desc","term":"","selectedFacets":[{"key":"category-1","value":"almacen"},{"key":"channel","value":"{\"salesChannel\":\"4\",\"regionId\":\"U1cjdGF0YXV5bW9udGV2aWRlbw==\"}"},{"key":"locale","value":"es-UY"}]}

@@ -87,3 +87,6 @@ def get_eldorado_categories()->list[str]:
             result.extend(list)
 
     return result
+
+def get_tata_categories()->list[str]:
+    return ['almacen', 'frescos', 'congelados', 'perfumeria']
