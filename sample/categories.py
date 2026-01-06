@@ -89,7 +89,7 @@ def get_eldorado_categories()->list[str]:
     return result
 
 def get_tata_categories()->list[str]:
-    return ['almacen', 'frescos', 'congelados', 'perfumeria']
+    return ['almacen', 'bebidas', 'frescos', 'congelados', 'perfumeria']
 
 tienda_inglesa = {
     'Almacen':['78'],
