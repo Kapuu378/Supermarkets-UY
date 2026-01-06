@@ -90,3 +90,17 @@ def get_eldorado_categories()->list[str]:
 
 def get_tata_categories()->list[str]:
     return ['almacen', 'frescos', 'congelados', 'perfumeria']
+
+tienda_inglesa = {
+    'Almacen':['78'],
+    'Frescos':['1894'],
+    'Bebidas':['1001'],
+    'Congelados':['181'],
+    'Perfumeria':['569']
+}
+
+def get_tienda_inglesa_categories()->list[str]:
+    categories = []
+    for category in tienda_inglesa.values():
+        categories.extend(category)
+    return categories

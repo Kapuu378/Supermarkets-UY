@@ -1,0 +1,19 @@
+{
+    "title": "Tienda Inglesa product schema", 
+    "description": "Product from Tienda Inglesa",
+    "type": "object",
+    "properties":{
+        "Id":{
+            "type":"number"
+        },
+        "Name":{
+            "type":"string"
+        },
+        "Price":{
+            "type":"string"
+        },
+        "BeforePriceStr":{
+            "type":"string"
+        }
+	}, "required":["Id", "Name", "Price", "BeforePriceStr"]
+}
