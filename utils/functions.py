@@ -2,6 +2,7 @@ from requests.exceptions import JSONDecodeError
 from pathlib import Path
 from typing import Union
 from datetime import datetime
+import re
 
 from sqlalchemy.orm import Session
 import requests
@@ -95,3 +96,13 @@ def is_json_parseable(response: requests.Response)-> bool:
         return True
     except JSONDecodeError:
         return False
+    
+def parse_price(value):
+    value = str(value)
+
+    digits = re.sub(r"\D", "", value)
+
+    if digits == "":
+        return None
+
+    return int(digits)
