@@ -91,4 +91,4 @@ if __name__ == '__main__':
                     pushed_ids.append(product.ID)
 
             db_session.commit()
-            _from = _from + 100
+            _from = _from + 50
