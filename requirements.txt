@@ -3,3 +3,4 @@ sqlalchemy==2.0.44
 python-dotenv==1.0.1
 jsonschema==4.7.2
 mysqlclient==2.1.0
+beautifulsoup4==4.14.3
